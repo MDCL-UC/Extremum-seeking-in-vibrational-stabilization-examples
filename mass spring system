@@ -1,0 +1,44 @@
+%run the code in matlab live script 
+% mass-spring-damper system Example
+clear all
+clc
+
+% Define symbolic variables 
+syms x1 x2 x3 m alpha beta k a1 c1
+
+%x1 for x 
+%x2 for x_dot
+%x3 for u_hat
+
+% Parameters for mass-spring-damper system
+J=(x1-1)^2
+X = [x1; x2; x3]
+Z = [
+    x2; % dx1/dt = x2 (velocity)
+    -(alpha/m) * x1 - beta/m * x2^2+ c1 *x3 ; % dx2/dt = acceleration with damping, spring force, and control input 
+    0
+       ]
+Y = [
+    0;
+    a1;
+    k*J
+]
+%calculate [Y,Z] 
+L1=generateLieBracket(Y, Z, X);
+L1_1=generateLieBracket(Y, L1, X)   %[Y,[Y,Z]]
+% the averaged system
+
+x_dot=Z+ 0.25*L1_1 % x_bar_dot represent the averaged system
+
+function lieBracket = generateLieBracket(b1, b2, X)
+    % Inputs:
+    %   - b1, b2: Vector fields (symbolic expressions) representing the dynamics.
+    %   - X: Symbolic vector representing the state variables (e.g., [x1; x2; x3]).
+
+    % Calculate the Lie derivatives of b1 and b2 with respect to each state variable
+    diff_b1 = jacobian(b1, X);
+    diff_b2 = jacobian(b2, X);
+
+    % Compute the Lie bracket: b1b2 = diff_b2 * b1 - diff_b1 * b2
+    lieBracket = simplify(diff_b2 * b1 - diff_b1 * b2);
+end
